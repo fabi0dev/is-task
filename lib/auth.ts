@@ -1,16 +1,24 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
+const secret = process.env.NEXTAUTH_SECRET;
 
+if (!secret && process.env.NODE_ENV !== "test") {
+  throw new Error(
+    "NEXTAUTH_SECRET não está definido. Adicione NEXTAUTH_SECRET no arquivo .env"
+  );
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
 
   session: {
     strategy: "database",
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
 
   pages: {
@@ -46,7 +54,13 @@ export const authOptions: NextAuthOptions = {
         return user;
       },
     }),
+    // Necessário para permitir strategy "database" com Credentials (NextAuth exige outro provider além de credentials)
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "dummy",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "dummy",
+      allowDangerousEmailAccountLinking: true,
+    }),
   ],
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret,
 };

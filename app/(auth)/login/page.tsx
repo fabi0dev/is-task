@@ -41,7 +41,7 @@ export default function LoginPage() {
       });
 
       if (response.success) {
-        router.push(callbackUrl);
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err: unknown) {
